@@ -48,11 +48,11 @@ jobs:
     needs: push-memory-2026
     runs-on: self-hosted
     steps:
-      - name: Pull latest Docker image
-        run: docker pull matthieumarchand/memory-2026:latest
-
-      - name: Run container on port 80
-        run: |
+    - name: Connect via SSH and deploy
+      run: |
+        ssh matthieu@localhost "
+          docker pull matthieumarchand/memory-2026:latest
           docker stop memory-2026 || true
           docker rm memory-2026 || true
           docker run -d --name memory-2026 -p 80:80 matthieumarchand/memory-2026:latest
+        "
