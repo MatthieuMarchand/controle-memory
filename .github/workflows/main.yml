@@ -1,0 +1,61 @@
+name: CI/CD pipeline
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test-memory-2026:
+    name: Test Memory 2026
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test all JPEG files
+        run: file --mime-type ./html/**/*.jpg | grep -v image/jpeg && exit 1 || exit 0
+
+  build-memory-2026:
+    name: Build Memory 2026
+    needs: test-memory-2026
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: docker build -t matthieumarchand/memory-2026:latest .
+
+  push-memory-2026:
+    name: Push Memory 2026
+    needs: build-memory-2026
+    runs-on: self-hosted
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u matthieumarchand --password-stdin
+
+      - name: Push the Docker image
+        run: docker push matthieumarchand/memory-2026:latest
+
+  deploy-memory-2026:
+    name: Deploy Memory 2026
+    needs: push-memory-2026
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Connect via SSH and deploy
+        run: |
+          ssh -i /home/matthieu/.ssh/id_ed25519 matthieu@localhost "
+            cd /home/matthieu/junia/ap4/controle-memory
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
+          "
