@@ -13,10 +13,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Test all JPEG files
-        run: |
-          for myfile in $(find . -name "*.jpg"); do
-            file $myfile;
-          done
+        run: file --mime-type ./html/**/*.jpg | grep -v image/jpeg && exit 1 || exit 0
 
   build-memory-2026:
     name: Build Memory 2026
@@ -26,7 +23,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build Docker Image
-        run: docker build -t matthieumarchand/memory-2026 .
+        run: docker build -t matthieumarchand/memory-2026:latest .
 
   push-memory-2026:
     name: Push Memory 2026
@@ -44,7 +41,7 @@ jobs:
         run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u matthieumarchand --password-stdin
 
       - name: Push the Docker image
-        run: docker push matthieumarchand/memory-2026
+        run: docker push matthieumarchand/memory-2026:latest
 
   deploy-memory-2026:
     name: Deploy Memory 2026
@@ -52,10 +49,10 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Pull latest Docker image
-        run: docker pull matthieumarchand/memory-2026
+        run: docker pull matthieumarchand/memory-2026:latest
 
       - name: Run container on port 80
         run: |
           docker stop memory-2026 || true
           docker rm memory-2026 || true
-          docker run -d --name memory-2026 -p 80:80 matthieumarchand/memory-2026
+          docker run -d --name memory-2026 -p 80:80 matthieumarchand/memory-2026:latest
