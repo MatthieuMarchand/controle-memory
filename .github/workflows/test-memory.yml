@@ -1,0 +1,61 @@
+name: CI/CD pipeline
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test-memory-2026:
+    name: Test Memory 2026
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test all JPEG files
+        run: |
+          for myfile in $(find . -name "*.jpg"); do
+            file $myfile;
+          done
+
+  build-memory-2026:
+    name: Build Memory 2026
+    needs: test-memory-2026
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: docker build -t matthieumarchand/memory-2026 .
+
+  push-memory-2026:
+    name: Push Memory 2026
+    needs: build-memory-2026
+    runs-on: self-hosted
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u matthieumarchand --password-stdin
+
+      - name: Push the Docker image
+        run: docker push matthieumarchand/memory-2026
+
+  deploy-memory-2026:
+    name: Deploy Memory 2026
+    needs: push-memory-2026
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest Docker image
+        run: docker pull matthieumarchand/memory-2026
+
+      - name: Run container on port 80
+        run: |
+          docker stop memory-2026 || true
+          docker rm memory-2026 || true
+          docker run -d --name memory-2026 -p 80:80 matthieumarchand/memory-2026
