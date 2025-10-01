@@ -54,8 +54,8 @@ jobs:
       - name: Connect via SSH and deploy
         run: |
           ssh -i /home/matthieu/.ssh/id_ed25519 matthieu@localhost "
-            docker pull matthieumarchand/memory-2026:latest
-            docker stop memory-2026 || true
-            docker rm memory-2026 || true
-            docker run -d --name memory-2026 -p 80:80 matthieumarchand/memory-2026:latest
+            cd /home/matthieu/junia/ap4/controle-memory
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
           "
