@@ -53,7 +53,7 @@ jobs:
 
       - name: Connect via SSH and deploy
         run: |
-          ssh matthieu@localhost "
+          ssh -i /home/matthieu/.ssh/id_ed25519 matthieu@localhost "
             docker pull matthieumarchand/memory-2026:latest
             docker stop memory-2026 || true
             docker rm memory-2026 || true
